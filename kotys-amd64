@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# 
+# Experimental tool to build packages in clean buildenv
+# Author : V3n3RiX @ RogentOS
+#
+
+lowerdir="lowerdir"
+rwdir="rwdir"
+chrootdir="chrootdir"
+chrootuser="root"
+chrootcmd="emerge -av $* && equo rescue spmsync"
+chroothash="b6bcd3f153b6a45df74b262e88bfdd2b"
+
+checkroot () {
+	if [ "$(whoami)" != "root" ] ; then
+		echo "this script must be executed with root rights"
+		exit 1
+	fi
+}
+
+integrity_check () {
+	# check the integrity of squashed chroot, if matches break the loop and proceed to build
+	# else download it again to be sure the environment is always the same
+	while :
+	do
+		if [[ $(md5sum rogentos.squashfs | awk {'print $1'}) = "$chroothash" ]] ; then
+			echo ""
+			echo "chroot integrity seems OK...mounting and proceeding to build package"
+			echo ""
+			break
+		else
+			echo ""
+			echo "chroot integrity seems corrupted...downloading again"
+			echo ""
+			# insert download link in here
+		fi
+	done
+}
+
+create_dirs () {
+	# create the directory needed for overlayfs mount
+	mkdir "rwdir"
+	mkdir "lowerdir"
+	mkdir "chrootdir"
+}
+
+startchroot () {
+	# mount squashed(readonly) chroot and add rw layer on top of it
+	# mount them as overlayfs, so everything we do it will be done in rw layer
+	# this way build env is always the same, no matter what
+	mount rogentos.squashfs "$lowerdir"
+	mount -t overlayfs -o lowerdir="$lowerdir",upperdir="$rwdir" overlayfs "$chrootdir"
+	mount -o bind /proc "$chrootdir"/proc
+	mount -o bind /sys "$chrootdir"/sys
+	mount -o bind /dev "$chrootdir"/dev
+	mount -o bind /dev/pts "$chrootdir"/dev/pts
+	mount -o bind /dev/shm "$chrootdir"/dev/shm
+	mount -o bind /tmp "$chrootdir"/tmp
+}
+
+stopchroot () {
+	umount -l "$chrootdir"/proc
+	umount -l "$chrootdir"/sys
+	umount -l "$chrootdir"/dev/pts
+	umount -l "$chrootdir"/dev/shm
+	umount -l "$chrootdir"/dev
+	umount -l "$chrootdir"/tmp
+	umount -l "$chrootdir"
+	umount -l "$lowerdir"
+}
+
+clean_build () {
+	# run defined commands in the overlayfs chroot
+	# everything will be writen in rw layer, original env stays untouched
+	chroot "$chrootdir" su - "$chrootuser" -c "$chrootcmd"
+}
+
+cleanup () {
+	rm -rf "chrootdir"
+	rm -rf "lowerdir"
+	rm -rf "rwdir"
+}
+
+main () {
+	if checkroot; then
+		integrity_check
+		create_dirs
+		startchroot
+		clean_build
+		stopchroot
+		#cleanup
+	fi
+}
+
+main 
+exit 0
