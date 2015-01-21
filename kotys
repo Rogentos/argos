@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# Experimental tool to build packages for any distro from any distro using preconfigured clean chroot jails
+#
+
+checkroot () {
+	if [ "$(whoami)" != "root" ] ; then
+		echo "this script must be executed with root rights"
+		exit 1
+	fi
+}
+
+select_env () {
+	echo -e ""
+	echo -e "Choose your destiny"
+	echo -e ""
+	OPTIONS="RogentOS Debian ArchLinux"
+	select opt in $OPTIONS; do
+		if [ "$opt" = "RogentOS" ]; then
+			source rogentos_env
+			exit 0
+		elif [ "$opt" = "Debian" ]; then
+			source debian_env
+			exit 0
+		elif [ "$opt" = "ArchLinux" ]; then
+			source archlinux_env
+			exit 0
+		else
+			echo -e "Wrong option, please try again!"
+		fi
+	done
+}
+
+main () {
+	if checkroot; then
+		select_env
+	fi
+}
+
+main
+exit 0

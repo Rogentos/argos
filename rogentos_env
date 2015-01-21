@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # 
-# Experimental tool to build packages in clean buildenv
-# Author : V3n3RiX @ RogentOS
+# RogentOS env for building packages in clean chroot
 #
 
 lowerdir="lowerdir"
@@ -10,13 +9,6 @@ chrootdir="chrootdir"
 chrootuser="root"
 chrootcmd="emerge -av $* && equo rescue spmsync"
 chroothash="b6bcd3f153b6a45df74b262e88bfdd2b"
-
-checkroot () {
-	if [ "$(whoami)" != "root" ] ; then
-		echo "this script must be executed with root rights"
-		exit 1
-	fi
-}
 
 integrity_check () {
 	# check the integrity of squashed chroot, if matches break the loop and proceed to build
@@ -82,14 +74,12 @@ cleanup () {
 }
 
 main () {
-	if checkroot; then
-		integrity_check
-		create_dirs
-		startchroot
-		clean_build
-		stopchroot
-		#cleanup
-	fi
+	integrity_check
+	create_dirs
+	startchroot
+	clean_build
+	stopchroot
+	#cleanup
 }
 
 main 
