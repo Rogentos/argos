@@ -8,6 +8,7 @@ rwdir="rwdir"
 chrootdir="chrootdir"
 chrootuser="root"
 chrootcmd="emerge -av $* && equo rescue spmsync"
+chrootname="argos.squashfs"
 chroothash="b6bcd3f153b6a45df74b262e88bfdd2b"
 
 integrity_check () {
@@ -15,7 +16,7 @@ integrity_check () {
 	# else download it again to be sure the environment is always the same
 	while :
 	do
-		if [[ $(md5sum argos.squashfs | awk {'print $1'}) = "$chroothash" ]] ; then
+		if [[ $(md5sum "$chrootname" | awk {'print $1'}) = "$chroothash" ]] ; then
 			echo ""
 			echo "chroot integrity seems OK...mounting and proceeding to build package"
 			echo ""
@@ -31,16 +32,16 @@ integrity_check () {
 
 create_dirs () {
 	# create the directory needed for overlayfs mount
-	mkdir "rwdir"
-	mkdir "lowerdir"
-	mkdir "chrootdir"
+	mkdir "$rwdir"
+	mkdir "$lowerdir"
+	mkdir "$chrootdir"
 }
 
 startchroot () {
 	# mount squashed(readonly) chroot and add rw layer on top of it
 	# mount them as overlayfs, so everything we do it will be done in rw layer
 	# this way build env is always the same, no matter what
-	mount argos.squashfs "$lowerdir"
+	mount "$chrootname" "$lowerdir"
 	mount -t overlayfs -o lowerdir="$lowerdir",upperdir="$rwdir" overlayfs "$chrootdir"
 	mount -o bind /proc "$chrootdir"/proc
 	mount -o bind /sys "$chrootdir"/sys
@@ -68,9 +69,9 @@ clean_build () {
 }
 
 cleanup () {
-	rm -rf "chrootdir"
-	rm -rf "lowerdir"
-	rm -rf "rwdir"
+	rm -rf "$chrootdir"
+	rm -rf "$lowerdir"
+	rm -rf "$rwdir"
 }
 
 main () {
