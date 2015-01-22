@@ -9,8 +9,9 @@ chrootdir="chrootdir"
 chrootuser="root"
 chrootname="argos.squashfs"
 chroothash="b6bcd3f153b6a45df74b262e88bfdd2b"
-chroot_build="emerge -av $* && equo rescue spmsync"
-chroot_upload="eit add $*"
+chroot_packages="$@"
+chroot_build="emerge -av "$chroot_packages" && equo rescue spmsync"
+chroot_upload="eit add "$chroot_packages""
 
 integrity_check () {
 	# check the integrity of squashed chroot, if matches break the loop and proceed to build

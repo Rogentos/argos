@@ -3,6 +3,8 @@
 # Experimental tool to build packages for any distro from any distro using preconfigured clean chroot jails
 #
 
+chroot_packages="$@"
+
 checkroot () {
 	if [ "$(whoami)" != "root" ] ; then
 		echo "this script must be executed with root rights"
@@ -17,7 +19,7 @@ select_env () {
 	OPTIONS="ArgOS Debian ArchLinux"
 	select opt in $OPTIONS; do
 		if [ "$opt" = "ArgOS" ]; then
-			source argos_env
+			source argos_env "$chroot_packages"
 			exit 0
 		elif [ "$opt" = "Debian" ]; then
 			source debian_env
