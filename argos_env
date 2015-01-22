@@ -7,9 +7,10 @@ lowerdir="lowerdir"
 rwdir="rwdir"
 chrootdir="chrootdir"
 chrootuser="root"
-chrootcmd="emerge -av $* && equo rescue spmsync"
 chrootname="argos.squashfs"
 chroothash="b6bcd3f153b6a45df74b262e88bfdd2b"
+chroot_build="emerge -av $* && equo rescue spmsync"
+chroot_upload="eit add $*"
 
 integrity_check () {
 	# check the integrity of squashed chroot, if matches break the loop and proceed to build
@@ -62,10 +63,14 @@ stopchroot () {
 	umount -l "$lowerdir"
 }
 
-clean_build () {
-	# run defined commands in the overlayfs chroot
-	# everything will be writen in rw layer, original env stays untouched
-	chroot "$chrootdir" su - "$chrootuser" -c "$chrootcmd"
+build_packages () {
+	# build packages in squashfs chroot
+	chroot "$chrootdir" su - "$chrootuser" -c "$chroot_build"
+}
+
+upload_packages () {
+	# upload built packages to repositories
+	chroot "$chrootdir" su - "$chrootuser" -c "$chroot_upload"
 }
 
 cleanup () {
@@ -78,7 +83,8 @@ main () {
 	integrity_check
 	create_dirs
 	startchroot
-	clean_build
+	build_packages
+	upload_packages
 	stopchroot
 	#cleanup
 }
