@@ -14,10 +14,10 @@ select_env () {
 	echo -e ""
 	echo -e "Choose your destiny"
 	echo -e ""
-	OPTIONS="RogentOS Debian ArchLinux"
+	OPTIONS="ArgOS Debian ArchLinux"
 	select opt in $OPTIONS; do
-		if [ "$opt" = "RogentOS" ]; then
-			source rogentos_env
+		if [ "$opt" = "ArgOS" ]; then
+			source argos_env
 			exit 0
 		elif [ "$opt" = "Debian" ]; then
 			source debian_env
